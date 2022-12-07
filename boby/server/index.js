@@ -2,20 +2,31 @@ const express = require("express");
 const next = require("next");
 
 const PORT = process.env.PORT || 3000;
+
+
 const dev = process.env.NODE_ENV !== "production";
 const app = next({ dev });
 const handle = app.getRequestHandler();
 
-const knex = require('knex')({
-  client: 'mysql',
+const options = {
+  client: 'mysql2',
   connection: {
-    host : '127.0.0.1',
-    port : 3306,
-    user : 'root',
-    password : 'T0327587B!',
-    database : 'boby_db'
+      host: '127.0.0.1',
+      user: 'root',
+      port: '3306',
+      password: 'T0327587b!',
+      database: 'boby_db'
   }
-});
+}
+
+const knex = require('knex')(options);
+
+knex.raw("SELECT VERSION()").then(
+  (version) => console.log((version[0][0]))
+).catch((err) => { console.log( err); throw err })
+  .finally(() => {
+      knex.destroy();
+  });
 app
   .prepare()
   .then(() => {
