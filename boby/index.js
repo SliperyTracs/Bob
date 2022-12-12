@@ -1,8 +1,9 @@
 const express = require("express");
-const cors = require("cors");
+const bodyParser = require("body-parser");
 const next = require("next");
-
+const server = express();
 const PORT = process.env.PORT || 3000;
+server.use(bodyParser.json());
 
 const dev = process.env.NODE_ENV !== "production";
 const app = next({ dev });
@@ -20,16 +21,6 @@ const options = {
 };
 
 const knex = require("knex")(options);
-const users = require("../api/users");
-app.use(cors());
-app.use(function (err, req, res, next) {
-  res.status(err.status || 500);
-  res.json({
-    message: err.message,
-    error: (res.locals.error = req.app.get("env") === "development" ? err : {})
-  });
-});
-
 knex
   .raw("SELECT VERSION()")
   .then(version => console.log(version[0][0]))
@@ -43,9 +34,7 @@ knex
 app
   .prepare()
   .then(() => {
-    const server = express();
-
-    server.get("/api/test", (req, res) => {
+    server.get("/", (req, res) => {
       return res.end("we made it!");
     });
 
@@ -53,9 +42,21 @@ app
       return handle(req, res);
     });
 
+    server.get("/user", (req, res) => {
+      let query = knex("User").select("User.*");
+      query
+        .then(users => {
+          res.json(users);
+        })
+        .catch(err => {
+          console.error(err);
+          return res.json({ success: false, message: "An error occurred, please try again later." });
+        });
+    });
+
     server.listen(PORT, err => {
       if (err) throw err;
-      console.log(`> Ready on ${PORT}`);
+      console.log(`> Listening on ${PORT}`);
     });
   })
   .catch(ex => {
