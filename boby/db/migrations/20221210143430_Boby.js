@@ -73,7 +73,7 @@ exports.up = function (knex) {
     knex.schema
       .createTableIfNotExists("User", function (table) {
         // integer id
-        table.increments();
+        table.increments("id");
         // name
         table.string("name");
         //Username
