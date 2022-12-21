@@ -2,6 +2,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const next = require("next");
 const server = express();
+const router =express.Router();
 const PORT = process.env.PORT || 3000;
 server.use(bodyParser.json());
 const dev = process.env.NODE_ENV !== "production";
@@ -13,7 +14,7 @@ const options = {
     host: "127.0.0.1",
     user: "root",
     port: "3306",
-    password: "Bestappever123",
+    password: "T0327587b!",
     database: "boby_db"
   }
 };
@@ -31,12 +32,21 @@ app
     // server.get("*", (req, res) => {
     //   return handle(req, res);
     // });
-
-    server.get("/users", (req, res) => {
-      let query = knex("User").select("User.*");
+    server.delete("/api/delete/:model", (req,res) => {
+      let model = req.params.model
+      knex(model).del()
+      .then(res.json({success: true, message : "Deleted items successfully"}))
+      .catch(err => {
+        console.error(err);
+        return res.json({ success: false, message: "An error occurred, please try again later." });
+      });
+    })
+    server.get("/api/:model", (req, res) => {
+      let model = req.params.model
+      let query = knex(model).select(`${model}.*`);
       query
-        .then(users => {
-          res.json(users);
+        .then(items => {
+          res.json(items);
         })
         .catch(err => {
           console.error(err);
@@ -44,26 +54,21 @@ app
         });
     });
 
-    server.post("/user", (req, res) => {
-      const name = req.body.name ? req.body.name : "";
-      const email = req.body.email ? req.body.email : "";
-
-      if (!name) {
-        return res.json({ success: false, message: "Name is required" });
+    server.post("/api/:model", (req, res) => {
+      const body = req.body
+      let model = req.params.model
+      if (!body) {
+        return res.json({ success: false, message: "Body is required" });
       }
 
-      knex("user")
-        .insert({ name, email })
+      knex(model)
+        .insert(body)
         .then(id => {
           //get user by id
-          knex("user")
-            .select({
-              id: "id",
-              name: "name"
-            })
+          knex(model)
             .where({ id })
-            .then(user => {
-              return res.json(user[0]);
+            .then(items => {
+              return res.json(items);
             });
         })
         .catch(err => {
@@ -71,7 +76,19 @@ app
           return res.json({ success: false, message: "An error occurred, please try again later." });
         });
     });
-
+    server.get('/api/:model/:id', (req, res) => {
+      let id = parseInt(req.params.id)
+      let model = req.params.model
+      let query = knex(model).where('id',id)
+      query
+        .then(item => {
+          res.json(item);
+        })
+        .catch(err => {
+          console.error(err);
+          return res.json({ success: false, message: "An error occurred, please try again later." });
+        });
+    });
     server.listen(PORT, err => {
       if (err) throw err;
       console.log(`> Listening on ${PORT}`);
