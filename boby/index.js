@@ -72,6 +72,23 @@ app
         });
     });
 
+    server.put("/:id", async (req, res) => {
+      //get user first
+      const { id } = req.params;
+      const changes = req.body;
+
+      try {
+        const count = await knex("user").where({ id }).update(changes); //returns count of how many records are changed
+        if (count) {
+          res.status(200).json({ updated: count });
+        } else {
+          res.status(404).json({ message: "Record not found" });
+        }
+      } catch (err) {
+        res.status(500).json({ message: "Error updating new post", error: err });
+      }
+    });
+
     server.listen(PORT, err => {
       if (err) throw err;
       console.log(`> Listening on ${PORT}`);
